@@ -70,6 +70,17 @@ namespace MSCMP.Network {
 		NetPlayer passengerPlayer = null;
 
 		/// <summary>
+		/// Last engine state.
+		/// </summary>
+		GameVehicle.EngineStates lastEngineState;
+
+		/// <summary>
+		/// Latest received value.
+		/// </summary>
+		int lastGear = 0;
+		bool lastRange = false;
+
+		/// <summary>
 		/// Constructor.
 		/// </summary>
 		/// <param name="gameName">Name of the game object representing this vehicle.</param>
@@ -144,6 +155,19 @@ namespace MSCMP.Network {
 
 			if (GameObject != null) {
 				GameObject.Steering = message.steering;
+				GameObject.Throttle = message.throttle;
+				GameObject.Brake = message.brake;
+				GameObject.ClutchInput = message.clutch;
+				GameObject.Fuel = message.fuel;
+				if (message.HasGear) {
+					GameObject.Gear = message.Gear;
+				}
+				if (message.HasRange) {
+					GameObject.Range = message.Range;
+				}
+				if (message.HasHydraulic) {
+					GameObject.FrontHydraulic = message.Hydraulic;
+				}
 			}
 		}
 
@@ -174,12 +198,23 @@ namespace MSCMP.Network {
 		/// Callback called when game world gets loaded.
 		/// </summary>
 		public void OnGameWorldLoad() {
-			GameObject.onEnter = () => {
-				netManager.GetLocalPlayer().EnterVehicle(this, false);
+			GameObject.onEnter = (bool passenger) => {
+				netManager.GetLocalPlayer().EnterVehicle(this, passenger);
 			};
 
 			GameObject.onLeave = () => {
 				netManager.GetLocalPlayer().LeaveVehicle();
+			};
+
+			GameObject.onEngineStateChanged = (GameVehicle.EngineStates state, GameVehicle.DashboardStates dashstate, float startTime) => {
+				if (lastEngineState != state) {
+					netManager.GetLocalPlayer().WriteVehicleStateMessage(this, state, dashstate, startTime);
+					lastEngineState = state;
+				}
+			};
+
+			GameObject.onVehicleSwitchChanges = (GameVehicle.SwitchIDs id, bool newValue, float newValueFloat) => {
+				netManager.GetLocalPlayer().WriteVehicleSwitchMessage(this, id, newValue, newValueFloat);
 			};
 
 
@@ -204,7 +239,41 @@ namespace MSCMP.Network {
 			message.position = Utils.GameVec3ToNet(transform.position);
 			message.rotation = Utils.GameQuatToNet(transform.rotation);
 			message.steering = GameObject.Steering;
+			message.throttle = GameObject.Throttle;
+			message.brake = GameObject.Brake;
+			message.clutch = GameObject.ClutchInput;
+			message.fuel = GameObject.Fuel;
+
+			//Only send following messages when they have changed
+			if (GameObject.Gear != lastGear) {
+				lastGear = GameObject.Gear;
+				message.Gear = GameObject.Gear;
+			}
+			if (GameObject.hasRange == true && GameObject.Range != lastRange) {
+				lastRange = GameObject.Range;
+				message.Range = GameObject.Range;
+			}
+			if (GameObject.isTractor == true) {
+				message.Hydraulic = GameObject.FrontHydraulic;
+			}
 			return true;
+		}
+
+		/// <summary>
+		/// Sets engine and dashboard state of vehicle.
+		/// </summary>
+		/// <param name="state">Engine state to change.</param>
+		/// <param name="dashstate">Dashboard state to change.</param>
+		/// <param name="startTime">Engine start time.</param>
+		public void SetEngineState(int state, int dashstate, float startTime) {
+			GameVehicle.EngineStates engineState = (GameVehicle.EngineStates)state;
+			GameVehicle.DashboardStates dashState = (GameVehicle.DashboardStates)dashstate;
+			GameObject.SetEngineState(engineState, dashState, startTime);
+		}
+
+		public void SetVehicleSwitch(int id, bool newValue, float newValueFloat) {
+			GameVehicle.SwitchIDs switchID = (GameVehicle.SwitchIDs)id;
+			GameObject.SetVehicleSwitch(switchID, newValue, newValueFloat);
 		}
 
 		/// <summary>

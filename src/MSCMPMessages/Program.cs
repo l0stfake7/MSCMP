@@ -31,6 +31,8 @@
 			generator.GenerateMessage(typeof(Messages.LightSwitchMessage));
 			generator.GenerateMessage(typeof(Messages.WeatherUpdateMessage));
 			generator.GenerateEnum(typeof(Messages.WeatherUpdateMessage.WeatherType));
+			generator.GenerateMessage(typeof(Messages.VehicleStateMessage));
+			generator.GenerateMessage(typeof(Messages.VehicleSwitchMessage));
 			generator.EndGeneration();
 		}
 	}

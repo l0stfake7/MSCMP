@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Text;
 using UnityEngine;
@@ -318,6 +318,45 @@ namespace MSCMP.Network {
 				player.HandleVehicleSync(msg);
 			});
 
+			netMessageHandler.BindMessageHandler((Steamworks.CSteamID sender, Messages.VehicleStateMessage msg) => {
+				NetPlayer player = netManager.GetPlayer(sender);
+				if (player == null) {
+					return;
+				}
+
+				NetVehicle vehicle = GetVehicle(msg.vehicleId);
+				if (vehicle == null) {
+					Logger.Log("Player " + player.SteamId + " tried to set state of vehicle " + msg.vehicleId + " but there is no vehicle with such id.");
+					return;
+				}
+
+				float startTime = -1;
+				if (msg.HasStartTime) {
+					startTime = msg.StartTime;
+				}
+
+				vehicle.SetEngineState(msg.state, msg.dashstate, startTime);
+			});
+
+			netMessageHandler.BindMessageHandler((Steamworks.CSteamID sender, Messages.VehicleSwitchMessage msg) => {
+				NetPlayer player = netManager.GetPlayer(sender);
+				if (player == null) {
+					return;
+				}
+
+				NetVehicle vehicle = GetVehicle(msg.vehicleId);
+				if (vehicle == null) {
+					Logger.Log("Player " + player.SteamId + " tried to change a switch in vehicle " + msg.vehicleId + " but there is no vehicle with such id.");
+					return;
+				}
+
+				float newValueFloat = -1;
+				if (msg.HasSwitchValueFloat) {
+					newValueFloat = msg.SwitchValueFloat;
+				}
+
+				vehicle.SetVehicleSwitch(msg.switchID, msg.switchValue, newValueFloat);
+			});
 
 			netMessageHandler.BindMessageHandler((Steamworks.CSteamID sender, Messages.PickupObjectMessage msg) => {
 				NetPlayer player = netManager.GetPlayer(sender);

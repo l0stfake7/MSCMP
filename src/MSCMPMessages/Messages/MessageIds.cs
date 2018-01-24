@@ -33,5 +33,7 @@ namespace MSCMPMessages.Messages {
 		RemoveBottle,
 		LightSwitch,
 		WeatherSync,
+		VehicleState,
+		VehicleSwitch,
 	}
 }
