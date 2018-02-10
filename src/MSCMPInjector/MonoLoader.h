@@ -24,7 +24,7 @@ typedef void (_cdecl *mono_set_commandline_arguments_t)(int a1, char **a2, char 
 typedef void (_cdecl *mono_add_internal_call_t)(const char *name, const void* method);
 typedef char* (_cdecl *mono_string_to_utf8_t)(MonoString *string_obj);
 typedef void (_cdecl *g_free_t)(void *data);
-
+typedef void (_cdecl *mono_print_unhandled_exception_t)(MonoObject *exception);
 
 class Mono
 {
@@ -61,4 +61,5 @@ public:
 	mono_add_internal_call_t	mono_add_internal_call = nullptr;
 	mono_string_to_utf8_t		mono_string_to_utf8		= nullptr;
 	g_free_t					g_free				= nullptr; // in unity mono.dll mono_free it's called g_free
+	mono_print_unhandled_exception_t mono_print_unhandled_exception = nullptr;
 };
