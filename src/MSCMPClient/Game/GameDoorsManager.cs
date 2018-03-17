@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using UnityEngine;
 using MSCMP.Game.Objects;
 
@@ -49,23 +49,20 @@ namespace MSCMP.Game {
 			// Register all doors in game.
 
 			foreach (var go in gos) {
-
-				if (!go.name.StartsWith("Door")) {
+				if (!go.name.StartsWith("Door") && !go.name.StartsWith("Handle")) {
 					continue;
 				}
 
-
-				if (go.transform.childCount == 0) {
+				if (go.name == "Handle" && go.transform.parent.gameObject.name != "Door") {
 					continue;
 				}
 
-				Transform pivot = go.transform.GetChild(0);
-				if (pivot == null || pivot.name != "Pivot") {
-					continue;
-				}
-
-				var playMakerFsm = Utils.GetPlaymakerScriptByName(go, "Use");
+				PlayMakerFSM playMakerFsm = Utils.GetPlaymakerScriptByName(go, "Use");
 				if (playMakerFsm == null) {
+					continue;
+				}
+
+				if (playMakerFsm.Fsm.GetFsmGameObject("Pivot") == null) {
 					continue;
 				}
 
@@ -87,7 +84,7 @@ namespace MSCMP.Game {
 					};
 					doors.Add(door);
 
-					Logger.Log("Registered doors " + go.name);
+					Logger.Debug("Registered doors " + go.name);
 				}
 			}
 		}
